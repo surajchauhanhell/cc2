@@ -1,24 +1,52 @@
 const express = require("express");
+const axios = require("axios");
 
 const app = express();
 
-app.get("/convert", (req, res) => {
+const exchangeRateApi = "https://api.exchangerate-api.com/v4/latest/INR";
 
-    const rupees = parseFloat(req.query.inr);
+app.get("/convert", async (req, res) => {
+  const { amount, to } = req.query;
 
-    if (!rupees) {
-        return res.status(400).json({ error: "Invalid amount" });
+  // Check if parameters exist
+  if (!amount || !to) {
+    return res.status(400).json({
+      error: "Please provide amount and currency code. Example: ?amount=2000&to=USD"
+    });
+  }
+
+  try {
+    const response = await axios.get(exchangeRateApi);
+
+    const exchangeRate = response.data.rates[to.toUpperCase()];
+
+    if (!exchangeRate) {
+      return res.status(400).json({
+        error: "Invalid currency code"
+      });
     }
 
-    const usd = rupees / 75;
+    const convertedAmount = (parseFloat(amount) * exchangeRate).toFixed(2);
 
     res.json({
-        rupees: rupees,
-        dollars: usd.toFixed(2)
+      from: "INR",
+      to: to.toUpperCase(),
+      amount: amount,
+      convertedAmount: convertedAmount
     });
 
+  } catch (error) {
+    console.error(error.message);
+
+    res.status(500).json({
+      error: "Error fetching exchange rates"
+    });
+  }
 });
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Test URL: http://localhost:${PORT}/convert?amount=200000&to=USD`);
 });

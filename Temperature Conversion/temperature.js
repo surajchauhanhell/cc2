@@ -1,23 +1,30 @@
 const express = require("express");
+
 const app = express();
 
-app.get("/temperature", (req, res) => {
+// API Endpoint
+app.get("/convert", (req, res) => {
 
-    const f = parseFloat(req.query.f);
+    const fahrenheit = parseFloat(req.query.f);
 
-    if (isNaN(f)) {
-        return res.status(400).json({ error: "Invalid input" });
+    if (isNaN(fahrenheit)) {
+        return res.status(400).json({
+            error: "Please provide temperature in Fahrenheit"
+        });
     }
 
-    const c = (f - 32) * 5 / 9;
+    const celsius = ((fahrenheit - 32) * 5) / 9;
 
     res.json({
-        fahrenheit: f,
-        celsius: c.toFixed(2)
+        fahrenheit: fahrenheit,
+        celsius: celsius.toFixed(2)
     });
 
 });
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+const PORT = 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Test: http://localhost:3000/convert?f=100`);
 });
